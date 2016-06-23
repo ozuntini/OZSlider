@@ -38,7 +38,7 @@ int adcIn = 0;
 
 //declare button poll function
 int readLcdButtons() {
-	delay(200); //debounce delay, tuned experimentally. delay is fine as program shouldn't be doing anything else at this point anyway
+	delay(250); //debounce delay, tuned experimentally. delay is fine as program shouldn't be doing anything else at this point anyway
 	adcIn = analogRead(analogReadPin); //read value
 	// threshold values confirmed by experimentation with button calibration sketch returning the following ADC read values:
 	// right: 0, up: 141, down: 327 left: 504 select: 741
@@ -57,46 +57,41 @@ void config() {
 	//	Define menu config
 	char* menuConfigItems[] = {
 		"Long. du mvt.  >", "< Long. cycle >", "< Long. pause  >", "< Nb de pauses >", "<  Direction   >", "< Terminer conf."};
-
-	lcd.clear();
-	lcd.setCursor(0,0);
-	lcd.print(menuConfigItems[0]);
-	do {
-		btnVal = readLcdButtons();      //continually read the buttons...
+	int iMenu=0;
+	while(iMenu<6){				//Modifier la limite si plus ou moins d'item au menu
+		lcd.clear();
+	    lcd.setCursor(0,0);
+	    lcd.print(menuConfigItems[iMenu]);
+	    do {
+	    	btnVal = readLcdButtons();      //continually read the buttons...
+	    }
+	    while (btnVal==5 || btnVal==0 || btnVal==1);	//on ne sort que sur btnR, btnL ou btnSel
+	    switch (btnVal) {
+	    	case 2:							//Left buton
+	    	   	iMenu--;
+	    	   	if(iMenu<0){iMenu=0;}
+	    	   	break;
+	    	case 3:							//Right buton
+	    		iMenu++;
+	    		if(iMenu>5){iMenu=5;}
+	    	    break;
+	    	case 4:							//Select buton
+	    		if(iMenu==5){				//End conf Menu
+	    			iMenu=6;	    		    
+	    		}
+	    		else{
+	    			lcd.clear();
+	    			lcd.setCursor(0,1);
+	    			lcd.print("Configuration");
+	    			delay(2000);
+				}
+	    	    break;
+	    	default:
+	    	      // do something
+	    	    break;
+	    }
 	}
-	while (btnVal==5);
-
-	if (currentMenuLevel==0) {
-	    switch (btnVal){
-	    	case  btnL:
-	    	{
-	    		if (currentMenuItem == 0) break;      //can't go left from here
-	        	else currentMenuItem--;
-	        	break;    
-	      	}
-	      	case  btnR:
-	    	{
-	        	if (currentMenuItem == 4) break;      //can't go right from here
-	        	else  currentMenuItem++;
-	        	break;
-	    	}
-	    	case  btnSel:
-	      	{
-	 	       currentMenuLevel++;
-	    	    if (currentCursorPos > 3 && (currentMenuItem == 0 || currentMenuItem == 2)) currentCursorPos = 3; //don't go off the end of the numbers for the 4-digit numbers
-	    	    if (currentCursorPos > 0 && (currentMenuItem > 2)) currentCursorPos = 0; // set blinking cursor to left for text-based options
-	    	    if (currentMenuItem == 4) {
-	    	    	//motion = 1;
-			        //motionControl();
-		          	break;
-	        	}
-	      	} 
-	    } //end of switch
-	} //end of level 0
 }
-
-
-
 
 void setup() {
 	lcd.begin(16, 2);               // initialise LCD lib full-screen
@@ -106,6 +101,10 @@ void setup() {
 	lcd.print("OZ-Slider v0.1!");
 	delay(2000);
 	config();
+
+				lcd.clear();
+	    		lcd.setCursor(0,1);
+	    		lcd.print("Start cycle ?");
 }
 
 void loop() {
