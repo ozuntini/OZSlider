@@ -26,6 +26,12 @@ int shutterTime = 0;				//temps de pose en 1/10 de s
 unsigned int stepsNumber = 2;		//nombre de poses max = 65535 poses
 boolean directionMotor = 0;			//Vers le moteur - Depuis le moteur
 
+void blink() {
+	lcd.noDisplay();
+	delay(250);
+	lcd.display();
+}
+
 //BUTTONS
 //define button values
 const int btnUp = 0;
@@ -67,8 +73,7 @@ void config() {
 	    lcd.print(menuConfigItems[iMenu]);
 	    do {
 	    	btnVal = readLcdButtons();      //continually read the buttons...
-	    }
-	    while (btnVal==5 || btnVal==0 || btnVal==1);	//on ne sort que sur btnR, btnL ou btnSel
+	    } while (btnVal==5 || btnVal==0 || btnVal==1);	//on ne sort que sur btnR, btnL ou btnSel
 	    switch (btnVal) {
 	    	case 2:							//Left buton
 	    	   	iMenu--;
@@ -120,23 +125,78 @@ void readConfig(int iConfig) {
 	    	lcd.setCursor(5,1);
 	    	lcd.print("s 65535 max");
 	    	break;
+	    case 2:							//Config de la duree des pause shutterTime
+	    	for (int i = 0; i < 4; i++) {
+	    		lcd.setCursor(i, 1);
+	    		lcd.print(currentShutterTime[i]);
+	    	}
+	    	lcd.setCursor(5,1);
+	    	lcd.print(" 1/10 s");
+	    	break;
+	    case 3:							//Config du nombre de pause stepsNumber
+	    	for (int i = 0; i < 5; i++) {
+	    		lcd.setCursor(i, 1);
+	    		lcd.print(currentStepsNumber[i]);
+	    	}
+	    	lcd.setCursor(5,1);
+	    	lcd.print("- 65535 max");
+	    	break;
+	    case 4:							//Config de la direction du mvt, Vers le moteur ou Depuis le moteur
+	    	do{
+	    		lcd.setCursor(0, 1);
+	    		if(directionMotor){
+	    			lcd.print("Vers le moteur  ");
+	    		} else {
+	    			lcd.print("Depuis le moteur");
+	    		}
+				btnVal = readLcdButtons();
+				if(btnVal==0 || btnVal ==1){ directionMotor = directionMotor ^ 1; }	//bascule de directionMotor
+	    	} while (btnVal!=4);		//Sortie sur bouton select
+	    	blink();
+	    	break;
 	    default:
 	    	break;
 	}
 	    delay(3000);
 }
 
+void backlightControl() {		//Modification de la luminosité du LCD
+	int valBacllight = 4;
+	do {
+		analogWrite(backlightControlPin, map(valBacllight, 0, 25, 0, 255));
+		btnVal = readLcdButtons();
+		switch (btnVal) {
+		    case 0:
+		    	valBacllight++;
+		    	if(valBacllight>10){ valBacllight=10; }
+		      	break;
+		    case 1:
+		    	valBacllight--;
+		    	if(valBacllight<0){ valBacllight=0; }
+		      	break;
+		    default:
+		    	break;
+		}
+		delay(100);
+	} while (btnVal!=4);
+}
+
+
+
 void setup() {
+	pinMode(backlightControlPin, OUTPUT);	// set backlight pin output
+	pinMode(stepperDrivePin, OUTPUT);		// set motor pin output
+	pinMode(chariotDirectionPin, OUTPUT);	// set direction pin output
+	pinMode(shutterTriggerPin, OUTPUT);		// set shutter pin output
+
 	lcd.begin(16, 2);               // initialise LCD lib full-screen
 	lcd.setCursor(0,0);             // set cursor position
 	lcd.print("Bienvenue dans");	// welcome screen
 	lcd.setCursor(0,1);
 	lcd.print("OZ-Slider v0.1!");
-	do {
-		btnVal = readLcdButtons();      //continually read the buttons...
-	}
-	while (btnVal==5);					//waiting push button
-	config();
+	backlightControl();				// gestion manuelle du backlight Up, Dn, Sel
+	config();						// enregistrement de la configuration du set
+
 
 				lcd.clear();
 	    		lcd.setCursor(0,1);
