@@ -16,12 +16,15 @@ const int stepperDrivePin = 11;
 const int chariotDirectionPin = 12;
 //define shutter trigger pin
 const int shutterTriggerPin = 13;
+//define moving Length maximum
+const int movingLengthMax = 1000;	//longueur maximum du déplacement à adapter en fonction du slider
 
 //	Define config variable
-int movingLength = 1000; 			//longueur du déplacement en mm init=longueur max
+int movingLength = 0; 				//longueur du déplacement en mm
 unsigned int movingDuration = 0;	//durée du cycle en s max = 65535s soit un peu plus de 18h
 int shutterTime = 0;				//temps de pose en 1/10 de s
 unsigned int stepsNumber = 2;		//nombre de poses max = 65535 poses
+boolean directionMotor = 0;			//Vers le moteur - Depuis le moteur
 
 //BUTTONS
 //define button values
@@ -38,7 +41,7 @@ int adcIn = 0;
 
 //declare button poll function
 int readLcdButtons() {
-	delay(250); //debounce delay, tuned experimentally. delay is fine as program shouldn't be doing anything else at this point anyway
+	delay(200); //debounce delay, tuned experimentally. delay is fine as program shouldn't be doing anything else at this point anyway
 	adcIn = analogRead(analogReadPin); //read value
 	// threshold values confirmed by experimentation with button calibration sketch returning the following ADC read values:
 	// right: 0, up: 141, down: 327 left: 504 select: 741
@@ -80,17 +83,47 @@ void config() {
 	    			iMenu=6;	    		    
 	    		}
 	    		else{
-	    			lcd.clear();
-	    			lcd.setCursor(0,1);
-	    			lcd.print("Configuration");
-	    			delay(2000);
+	    			readConfig (iMenu);
 				}
 	    	    break;
 	    	default:
 	    	      // do something
 	    	    break;
+	    	delay(500);
 	    }
 	}
+}
+
+void readConfig(int iConfig) {
+	int currentMovingLength[4] = {0,0,0,0};
+	int currentMovingDuration[5] = {0,0,0,0,0};
+	int currentShutterTime[4] = {0,0,0,0};
+	int currentStepsNumber[5] = {0,0,0,0,2};
+	switch (iConfig) {
+	    case 0:							//Config de la gestion du mvt movingLength
+	    	for (int i = 0; i < 4; i++) {
+	    		lcd.setCursor(i, 1);
+	    		lcd.print(currentMovingLength[i]);
+	    	}
+	    	lcd.setCursor(4,1);
+	    	lcd.print(" mm ");
+	    	lcd.setCursor(8,1);
+	    	lcd.print(movingLengthMax);
+	    	lcd.setCursor(12,1);
+	    	lcd.print(" max");
+	    	break;
+	    case 1:							//Config de la duree du mvt movingDuration
+	    	for (int i = 0; i < 5; i++) {
+	    		lcd.setCursor(i, 1);
+	    		lcd.print(currentMovingDuration[i]);
+	    	}
+	    	lcd.setCursor(5,1);
+	    	lcd.print("s 65535 max");
+	    	break;
+	    default:
+	    	break;
+	}
+	    delay(3000);
 }
 
 void setup() {
@@ -99,7 +132,10 @@ void setup() {
 	lcd.print("Bienvenue dans");	// welcome screen
 	lcd.setCursor(0,1);
 	lcd.print("OZ-Slider v0.1!");
-	delay(2000);
+	do {
+		btnVal = readLcdButtons();      //continually read the buttons...
+	}
+	while (btnVal==5);					//waiting push button
 	config();
 
 				lcd.clear();
