@@ -46,7 +46,7 @@ int btnVal = 5;
 int adcIn = 0;
 
 //declare button poll function
-int readLcdButtons() {
+int readLcdButtons() {			// return value of pressed button or none
 	delay(200); //debounce delay, tuned experimentally. delay is fine as program shouldn't be doing anything else at this point anyway
 	adcIn = analogRead(analogReadPin); //read value
 	// threshold values confirmed by experimentation with button calibration sketch returning the following ADC read values:
@@ -62,7 +62,7 @@ int readLcdButtons() {
 	return btnNone; //if it can't detect anything, return no button pressed
 }
 
-void config() {
+void config() {					// print menu and and call readConfig
 	//	Define menu config
 	char* menuConfigItems[] = {
 		"Long. du mvt.  >", "< Long. cycle >", "< Long. pause  >", "< Nb de pauses >", "<  Direction   >", "< Terminer conf."};
@@ -92,14 +92,13 @@ void config() {
 				}
 	    	    break;
 	    	default:
-	    	      // do something
 	    	    break;
 	    	delay(500);
 	    }
 	}
 }
 
-void readConfig(int iConfig) {
+void readConfig(int iConfig) {	// for each parameters readConfig
 	int currentMovingLength[4] = {0,0,0,0};
 	int currentMovingDuration[5] = {0,0,0,0,0};
 	int currentShutterTime[4] = {0,0,0,0};
