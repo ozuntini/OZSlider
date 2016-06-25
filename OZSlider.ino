@@ -26,7 +26,7 @@ int shutterTime = 0;				//temps de pose en 1/10 de s
 unsigned int stepsNumber = 2;		//nombre de poses max = 65535 poses
 boolean directionMotor = 0;			//Vers le moteur - Depuis le moteur
 
-void blink() {
+void totalBlink() {
 	lcd.noDisplay();
 	delay(250);
 	lcd.display();
@@ -98,47 +98,115 @@ void config() {					// print menu and and call readConfig
 	}
 }
 
+//Permet la modification de chacun des digits entre la position donnée et 0 maximum 5 digit
+//Retourne la valeur modifiée. 
+unsigned int modifyReadValue(int pLastCar){		// In=Position of last car. Out=value
+	unsigned int currentValue = 0;
+	int currentValueArray[5] = {0,0,0,0,0};		// 5 digit limited
+	int xCar = pLastCar;
+	for (int i = 0; i <= xCar; i++) {
+		lcd.setCursor(i, 1);
+	    lcd.print(currentValueArray[i]);
+	}
+	lcd.setCursor(xCar, 1);
+	lcd.blink();
+	do{											// set value for all digit between 0 and pLastCar
+		btnVal = readLcdButtons();
+		switch (btnVal) {
+		    case 0:			//btnUp value digit +1
+		    	currentValueArray[xCar]++;
+		    	if(currentValueArray[xCar]>=10){ currentValueArray[xCar]=9; }
+		    	break;
+		    case 1:			//btnDn value digit -1
+		    	currentValueArray[xCar]--;
+		    	if(currentValueArray[xCar]<0){ currentValueArray[xCar]=0; }
+		    	break;
+		    case 2:			//btnL position digit -1
+		    	xCar--;
+		    	if(xCar<0){ xCar=0; }
+		    	break;
+		    case 3:			//btnR position digit +1
+		    	xCar++;
+		    	if(xCar>pLastCar){ xCar=pLastCar; }
+		    	break;
+		    default:
+		      // do something
+		      break;
+		}
+		lcd.setCursor(xCar, 1);
+		lcd.print(currentValueArray[xCar]);
+		lcd.setCursor(xCar, 1);
+	} while (btnVal!=4);
+	lcd.noBlink();
+	// calcul a final value
+	for (int i = 0; i <= pLastCar; i++) {
+		currentValue *= 10;
+		currentValue += currentValueArray[i];
+	}
+	return currentValue;
+}
+
 void readConfig(int iConfig) {	// for each parameters readConfig
-	int currentMovingLength[4] = {0,0,0,0};
-	int currentMovingDuration[5] = {0,0,0,0,0};
-	int currentShutterTime[4] = {0,0,0,0};
-	int currentStepsNumber[5] = {0,0,0,0,2};
 	switch (iConfig) {
 	    case 0:							//Config de la gestion du mvt movingLength
-	    	for (int i = 0; i < 4; i++) {
-	    		lcd.setCursor(i, 1);
-	    		lcd.print(currentMovingLength[i]);
-	    	}
+	    	// display value
+			lcd.setCursor(0,1);
+	    	lcd.print(movingLength);
+	    	// display info
 	    	lcd.setCursor(4,1);
 	    	lcd.print(" mm ");
 	    	lcd.setCursor(8,1);
 	    	lcd.print(movingLengthMax);
 	    	lcd.setCursor(12,1);
 	    	lcd.print(" max");
+	    	// set value
+	    	movingLength = int(modifyReadValue(3));
+			lcd.setCursor(0,1);
+			lcd.print("    ");
+			lcd.setCursor(0,1);
+	    	lcd.print(movingLength);
 	    	break;
 	    case 1:							//Config de la duree du mvt movingDuration
-	    	for (int i = 0; i < 5; i++) {
-	    		lcd.setCursor(i, 1);
-	    		lcd.print(currentMovingDuration[i]);
-	    	}
+	    	// display value
+			lcd.setCursor(0,1);
+	    	lcd.print(movingDuration);
+	    	// display info
 	    	lcd.setCursor(5,1);
 	    	lcd.print("s 65535 max");
+	    	// set value
+	    	movingDuration = modifyReadValue(4);
+			lcd.setCursor(0,1);
+			lcd.print("     ");
+			lcd.setCursor(0,1);
+	    	lcd.print(movingDuration);
 	    	break;
 	    case 2:							//Config de la duree des pause shutterTime
-	    	for (int i = 0; i < 4; i++) {
-	    		lcd.setCursor(i, 1);
-	    		lcd.print(currentShutterTime[i]);
-	    	}
+	    	// display value
+			lcd.setCursor(0,1);
+	    	lcd.print(shutterTime);
+	    	// display info
 	    	lcd.setCursor(5,1);
 	    	lcd.print(" 1/10 s");
+	    	// set value
+	    	shutterTime = int(modifyReadValue(3));
+			lcd.setCursor(0,1);
+			lcd.print("    ");
+			lcd.setCursor(0,1);
+	    	lcd.print(shutterTime);
 	    	break;
 	    case 3:							//Config du nombre de pause stepsNumber
-	    	for (int i = 0; i < 5; i++) {
-	    		lcd.setCursor(i, 1);
-	    		lcd.print(currentStepsNumber[i]);
-	    	}
+	    	// display value
+			lcd.setCursor(0,1);
+	    	lcd.print(stepsNumber);
+	    	// display info
 	    	lcd.setCursor(5,1);
 	    	lcd.print("- 65535 max");
+	    	// set value
+	    	stepsNumber = modifyReadValue(4);
+			lcd.setCursor(0,1);
+			lcd.print("     ");
+			lcd.setCursor(0,1);
+	    	lcd.print(stepsNumber);
 	    	break;
 	    case 4:							//Config de la direction du mvt, Vers le moteur ou Depuis le moteur
 	    	do{
@@ -151,12 +219,12 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 				btnVal = readLcdButtons();
 				if(btnVal==0 || btnVal ==1){ directionMotor = directionMotor ^ 1; }	//bascule de directionMotor
 	    	} while (btnVal!=4);		//Sortie sur bouton select
-	    	blink();
+	    	totalBlink();
 	    	break;
 	    default:
 	    	break;
 	}
-	    delay(3000);
+	delay(1000);
 }
 
 void backlightControl() {		//Modification de la luminosité du LCD
@@ -183,6 +251,7 @@ void backlightControl() {		//Modification de la luminosité du LCD
 
 
 void setup() {
+	Serial.begin(9600);
 	pinMode(backlightControlPin, OUTPUT);	// set backlight pin output
 	pinMode(stepperDrivePin, OUTPUT);		// set motor pin output
 	pinMode(chariotDirectionPin, OUTPUT);	// set direction pin output
@@ -195,7 +264,17 @@ void setup() {
 	lcd.print("OZ-Slider v0.1!");
 	backlightControl();				// gestion manuelle du backlight Up, Dn, Sel
 	config();						// enregistrement de la configuration du set
-
+			Serial.println("Config");
+			Serial.print("Long. Mvt : ");
+			Serial.println(movingLength);
+			Serial.print("Long. Cycle : ");
+			Serial.println(movingDuration);
+			Serial.print("Temps de pose : ");
+			Serial.println(shutterTime);
+			Serial.print("Nb. de pause : ");
+			Serial.println(stepsNumber);
+			Serial.print("Direction : ");
+			Serial.println(directionMotor);
 
 				lcd.clear();
 	    		lcd.setCursor(0,1);
