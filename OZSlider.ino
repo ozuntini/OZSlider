@@ -20,17 +20,11 @@ const int shutterTriggerPin = 13;
 const int movingLengthMax = 1000;	//longueur maximum du déplacement à adapter en fonction du slider
 
 //	Define config variable
-int movingLength = 0; 				//longueur du déplacement en mm
+int movingLength = movingLengthMax; //longueur du déplacement en mm
 unsigned int movingDuration = 0;	//durée du cycle en s max = 65535s soit un peu plus de 18h
 int shutterTime = 0;				//temps de pose en 1/10 de s
 unsigned int stepsNumber = 2;		//nombre de poses max = 65535 poses
 boolean directionMotor = 0;			//Vers le moteur - Depuis le moteur
-
-void totalBlink() {
-	lcd.noDisplay();
-	delay(250);
-	lcd.display();
-}
 
 //BUTTONS
 //define button values
@@ -60,42 +54,6 @@ int readLcdButtons() {			// return value of pressed button or none
 	if (adcIn < 850)  return btnSel;
 
 	return btnNone; //if it can't detect anything, return no button pressed
-}
-
-void config() {					// print menu and and call readConfig
-	//	Define menu config
-	char* menuConfigItems[] = {
-		"Long. du mvt.  >", "< Long. cycle >", "< Long. pause  >", "< Nb de pauses >", "<  Direction   >", "< Terminer conf."};
-	int iMenu=0;
-	while(iMenu<6){				//Modifier la limite si plus ou moins d'item au menu
-		lcd.clear();
-	    lcd.setCursor(0,0);
-	    lcd.print(menuConfigItems[iMenu]);
-	    do {
-	    	btnVal = readLcdButtons();      //continually read the buttons...
-	    } while (btnVal==5 || btnVal==0 || btnVal==1);	//on ne sort que sur btnR, btnL ou btnSel
-	    switch (btnVal) {
-	    	case 2:							//Left buton
-	    	   	iMenu--;
-	    	   	if(iMenu<0){iMenu=0;}
-	    	   	break;
-	    	case 3:							//Right buton
-	    		iMenu++;
-	    		if(iMenu>5){iMenu=5;}
-	    	    break;
-	    	case 4:							//Select buton
-	    		if(iMenu==5){				//End conf Menu
-	    			iMenu=6;	    		    
-	    		}
-	    		else{
-	    			readConfig (iMenu);
-				}
-	    	    break;
-	    	default:
-	    	    break;
-	    	delay(500);
-	    }
-	}
 }
 
 //Permet la modification de chacun des digits entre la position donnée et 0 maximum 5 digit
@@ -211,20 +169,75 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 	    case 4:							//Config de la direction du mvt, Vers le moteur ou Depuis le moteur
 	    	do{
 	    		lcd.setCursor(0, 1);
+	    		lcd.blink();
 	    		if(directionMotor){
 	    			lcd.print("Vers le moteur  ");
 	    		} else {
 	    			lcd.print("Depuis le moteur");
 	    		}
+	    		lcd.setCursor(0,1);
 				btnVal = readLcdButtons();
 				if(btnVal==0 || btnVal ==1){ directionMotor = directionMotor ^ 1; }	//bascule de directionMotor
 	    	} while (btnVal!=4);		//Sortie sur bouton select
-	    	totalBlink();
+	    	lcd.noBlink();
 	    	break;
 	    default:
 	    	break;
 	}
 	delay(1000);
+}
+
+void config() {					// print menu and and call readConfig
+	//	Define menu config
+	char* menuConfigItems[] = {
+		"Long. du mvt.  >", "< Long. cycle >", "< Long. pause  >", "< Nb de pauses >", "<  Direction   >", "< Terminer conf."};
+	unsigned int valueItems[5] = {movingLength,movingDuration,shutterTime,stepsNumber,directionMotor};
+	int iMenu=0;
+	while(iMenu<6){				//Modifier la limite si plus ou moins d'item au menu
+		lcd.clear();
+	    lcd.setCursor(0,0);
+	    lcd.print(menuConfigItems[iMenu]);
+	    lcd.setCursor(0,1);
+	    if(iMenu<4){
+	    	lcd.print(valueItems[iMenu]);
+	    } else {
+	    	if(iMenu==4){
+	    		if(directionMotor){
+	    			lcd.print("Vers le moteur  ");
+		    	} else {
+		    		lcd.print("Depuis le moteur"); }
+	    	} else {
+	    		lcd.print("                "); }
+	    }
+	    do {
+	    	btnVal = readLcdButtons();      //continually read the buttons...
+	    } while (btnVal==5 || btnVal==0 || btnVal==1);	//on ne sort que sur btnR, btnL ou btnSel
+	    switch (btnVal) {
+	    	case 2:							//Left buton
+	    	   	iMenu--;
+	    	   	if(iMenu<0){iMenu=0;}
+	    	   	break;
+	    	case 3:							//Right buton
+	    		iMenu++;
+	    		if(iMenu>5){iMenu=5;}
+	    	    break;
+	    	case 4:							//Select buton
+	    		if(iMenu==5){				//End conf Menu
+	    			iMenu=6;	    		    
+	    		}
+	    		else{
+	    			readConfig (iMenu);
+	    			valueItems[0] = movingLength;
+	    			valueItems[1] = movingDuration;
+	    			valueItems[2] = shutterTime;
+	    			valueItems[3] = stepsNumber;
+				}
+	    	    break;
+	    	default:
+	    	    break;
+	    	delay(500);
+	    }
+	}
 }
 
 void backlightControl() {		//Modification de la luminosité du LCD
@@ -248,8 +261,6 @@ void backlightControl() {		//Modification de la luminosité du LCD
 	} while (btnVal!=4);
 }
 
-
-
 void setup() {
 	Serial.begin(9600);
 	pinMode(backlightControlPin, OUTPUT);	// set backlight pin output
@@ -264,6 +275,8 @@ void setup() {
 	lcd.print("OZ-Slider v0.1!");
 	backlightControl();				// gestion manuelle du backlight Up, Dn, Sel
 	config();						// enregistrement de la configuration du set
+
+			/* put config on serial port
 			Serial.println("Config");
 			Serial.print("Long. Mvt : ");
 			Serial.println(movingLength);
@@ -275,6 +288,7 @@ void setup() {
 			Serial.println(stepsNumber);
 			Serial.print("Direction : ");
 			Serial.println(directionMotor);
+			*/
 
 				lcd.clear();
 	    		lcd.setCursor(0,1);
