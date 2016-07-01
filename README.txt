@@ -3,6 +3,9 @@ Projet de création d'un slider pour timelapse.
 Création d'une application de déplacement du chariot via un moteur pas à pas et déclenchement de l'appariel photo.
 Arduino Uno, LCD KeypadShield SainSmart.
 
+Thanks to Rob Taylor http://tutsplus.com/authors/rob-taylor
+http://computers.tutsplus.com/tutorials/motion-control-with-arduino-motorising-a-camera-slider--cms-21539
+
 LCD Keypad
 Commande du LCD : LiquidCrystal lcd(8, 9, 4, 5, 6, 7) - 10 = backlight control
 Pin : 13, 12, 11, 3, 2, 1, 0 (disponibles)
