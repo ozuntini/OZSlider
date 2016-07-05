@@ -21,9 +21,9 @@ const int movingLengthMax = 1000;	//longueur maximum du déplacement à adapter 
 
 //	Define config variable
 int movingLength = movingLengthMax; //longueur du déplacement en mm
-unsigned int movingDuration = 0;	//durée du cycle en s max = 65535s soit un peu plus de 18h
-int shutterTime = 0;				//temps de pose en 1/10 de s
-unsigned int stepsNumber = 2;		//nombre de poses max = 65535 poses
+unsigned int movingDuration = 3600;	//durée du cycle en s max = 65535s soit un peu plus de 18h
+int shutterTime = 20;				//temps de pose en 1/10 de s
+unsigned int stepsNumber = 1500;		//nombre de poses max = 65535 poses
 boolean directionMotor = 0;			//Vers le moteur - Depuis le moteur
 
 //BUTTONS
@@ -56,12 +56,25 @@ int readLcdButtons() {			// return value of pressed button or none
 	return btnNone; //if it can't detect anything, return no button pressed
 }
 
-//Permet la modification de chacun des digits entre la position donnée et 0 maximum 5 digit
-//Retourne la valeur modifiée. 
-unsigned int modifyReadValue(int pLastCar){		// In=Position of last car. Out=value
-	unsigned int currentValue = 0;
+//Print Modify Read
+//Print value $2 on $1 car. lengh
+//Modify value by push bouton
+//Return modified value
+unsigned int printModifyReadValue(int pLastCar, unsigned int currentValue){		// In=Position of last car in array, value. Out=value
 	int currentValueArray[5] = {0,0,0,0,0};		// 5 digit limited
-	int xCar = pLastCar;
+	int xCar = pLastCar-1;
+	unsigned int valueInter = currentValue;
+	unsigned int calc=0;
+	//Make array for print and modify currentValue. Warning left alignment 
+	for (int i=0; i < pLastCar; i++) {
+		int fact=1;
+		for (int j=1; j < (pLastCar-i); j++) {
+			fact=fact*10;
+		}
+		valueInter=valueInter-calc;
+		calc=(valueInter/fact)*fact;
+		currentValueArray[i]=calc/fact;
+	}
 	for (int i = 0; i <= xCar; i++) {
 		lcd.setCursor(i, 1);
 	    lcd.print(currentValueArray[i]);
@@ -97,7 +110,8 @@ unsigned int modifyReadValue(int pLastCar){		// In=Position of last car. Out=val
 	} while (btnVal!=4);
 	lcd.noBlink();
 	// calcul a final value
-	for (int i = 0; i <= pLastCar; i++) {
+	currentValue = 0;
+	for (int i = 0; i < pLastCar; i++) {
 		currentValue *= 10;
 		currentValue += currentValueArray[i];
 	}
@@ -118,11 +132,12 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 	    	lcd.setCursor(12,1);
 	    	lcd.print(" max");
 	    	// set value
-	    	movingLength = int(modifyReadValue(3));
+	    	movingLength = int(printModifyReadValue(4,movingLength));
 			lcd.setCursor(0,1);
 			lcd.print("    ");
 			lcd.setCursor(0,1);
 	    	lcd.print(movingLength);
+	    	lcd.print(" mm");
 	    	break;
 	    case 1:							//Config de la duree du mvt movingDuration
 	    	// display value
@@ -132,7 +147,7 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 	    	lcd.setCursor(5,1);
 	    	lcd.print("s 65535 max");
 	    	// set value
-	    	movingDuration = modifyReadValue(4);
+	    	movingDuration = printModifyReadValue(5,movingDuration);
 			lcd.setCursor(0,1);
 			lcd.print("     ");
 			lcd.setCursor(0,1);
@@ -146,7 +161,7 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 	    	lcd.setCursor(5,1);
 	    	lcd.print(" 1/10 s");
 	    	// set value
-	    	shutterTime = int(modifyReadValue(3));
+	    	shutterTime = int(printModifyReadValue(4,shutterTime));
 			lcd.setCursor(0,1);
 			lcd.print("    ");
 			lcd.setCursor(0,1);
@@ -160,7 +175,7 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 	    	lcd.setCursor(5,1);
 	    	lcd.print("- 65535 max");
 	    	// set value
-	    	stepsNumber = modifyReadValue(4);
+	    	stepsNumber = printModifyReadValue(5,stepsNumber);
 			lcd.setCursor(0,1);
 			lcd.print("     ");
 			lcd.setCursor(0,1);
