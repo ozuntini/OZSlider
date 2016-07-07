@@ -58,7 +58,7 @@ int readLcdButtons() {			// return value of pressed button or none
 
 //Print Modify Read
 //Print value $2 on $1 car. lengh
-//Modify value by push bouton
+//Modify value by push button
 //Return modified value
 unsigned int printModifyReadValue(int pLastCar, unsigned int currentValue){		// In=Position of last car in array, value. Out=value
 	int currentValueArray[5] = {0,0,0,0,0};		// 5 digit limited
@@ -228,15 +228,15 @@ void config() {					// print menu and and call readConfig
 	    	btnVal = readLcdButtons();      //continually read the buttons...
 	    } while (btnVal==5 || btnVal==0 || btnVal==1);	//on ne sort que sur btnR, btnL ou btnSel
 	    switch (btnVal) {
-	    	case 2:							//Left buton
+	    	case 2:							//Left button
 	    	   	iMenu--;
 	    	   	if(iMenu<0){iMenu=0;}
 	    	   	break;
-	    	case 3:							//Right buton
+	    	case 3:							//Right button
 	    		iMenu++;
 	    		if(iMenu>5){iMenu=5;}
 	    	    break;
-	    	case 4:							//Select buton
+	    	case 4:							//Select button
 	    		if(iMenu==5){				//End conf Menu
 	    			iMenu=6;	    		    
 	    		}
@@ -313,4 +313,3 @@ void setup() {
 void loop() {
 
 }
-
