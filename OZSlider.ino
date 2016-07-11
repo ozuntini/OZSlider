@@ -18,12 +18,16 @@ const int chariotDirectionPin = 12;
 const int shutterTriggerPin = 13;
 //define moving Length maximum
 const int movingLengthMax = 1000;	//longueur maximum du déplacement à adapter en fonction du slider
+//step to mm conversion factor
+const int stepTommConvFactor = 5;	//x steps for 1mm
+//time per steps in ms
+const int timePerSteps = 100;		//time in ms for 1 step
 
 //	Define config variable
 int movingLength = movingLengthMax; //longueur du déplacement en mm
-unsigned int movingDuration = 3600;	//durée du cycle en s max = 65535s soit un peu plus de 18h
-int shutterTime = 20;				//temps de pose en 1/10 de s
-unsigned int stepsNumber = 1500;		//nombre de poses max = 65535 poses
+unsigned int movingDuration = 60;	//durée du cycle en mn max = 1020mn soit 17h
+int shutterTime = 1;				//intervalle entre deux poses en s min = 1s
+unsigned int stepsNumber = 1500;	//nombre de poses max = 65535 poses
 boolean directionMotor = 0;			//Vers le moteur - Depuis le moteur
 
 //BUTTONS
@@ -98,7 +102,7 @@ unsigned int printModifyReadValue(int pLastCar, unsigned int currentValue){		// 
 		    	break;
 		    case 3:			//btnR position digit +1
 		    	xCar++;
-		    	if(xCar>pLastCar){ xCar=pLastCar; }
+		    	if(xCar>=pLastCar){ xCar=pLastCar-1; }
 		    	break;
 		    default:
 		      // do something
@@ -133,6 +137,7 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 	    	lcd.print(" max");
 	    	// set value
 	    	movingLength = int(printModifyReadValue(4,movingLength));
+	    	if(movingLength > movingLengthMax){movingLength = movingLengthMax;}
 			lcd.setCursor(0,1);
 			lcd.print("    ");
 			lcd.setCursor(0,1);
@@ -145,9 +150,10 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 	    	lcd.print(movingDuration);
 	    	// display info
 	    	lcd.setCursor(5,1);
-	    	lcd.print("s 65535 max");
+	    	lcd.print("mn 1020 max");
 	    	// set value
-	    	movingDuration = printModifyReadValue(5,movingDuration);
+	    	movingDuration = printModifyReadValue(4,movingDuration);
+	    	if(movingDuration > 1020){movingDuration = 1020;}
 			lcd.setCursor(0,1);
 			lcd.print("     ");
 			lcd.setCursor(0,1);
@@ -159,7 +165,7 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 	    	lcd.print(shutterTime);
 	    	// display info
 	    	lcd.setCursor(5,1);
-	    	lcd.print(" 1/10 s");
+	    	lcd.print(" s     ");
 	    	// set value
 	    	shutterTime = int(printModifyReadValue(4,shutterTime));
 			lcd.setCursor(0,1);
@@ -168,14 +174,16 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 	    	lcd.print(shutterTime);
 	    	break;
 	    case 3:							//Config du nombre de pause stepsNumber
+	    	// calcul du stepsNumber
+	    	stepsNumber = (movingDuration * 60) / shutterTime;
 	    	// display value
 			lcd.setCursor(0,1);
 	    	lcd.print(stepsNumber);
 	    	// display info
 	    	lcd.setCursor(5,1);
-	    	lcd.print("- 65535 max");
+	    	lcd.print("Non modif.");
 	    	// set value
-	    	stepsNumber = printModifyReadValue(5,stepsNumber);
+	    	// stepsNumber = printModifyReadValue(5,stepsNumber);
 			lcd.setCursor(0,1);
 			lcd.print("     ");
 			lcd.setCursor(0,1);
@@ -205,7 +213,9 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 void config() {					// print menu and and call readConfig
 	//	Define menu config
 	char* menuConfigItems[] = {
-		"Long. du mvt.  >", "< Long. cycle >", "< Long. pause  >", "< Nb de pauses >", "<  Direction   >", "< Terminer conf."};
+		"Long. du mvt.  >", "< Long. cycle >", "< Intervalle   >", "< Nb de pauses >", "<  Direction   >", "< Terminer conf."};
+	// calcul du stepsNumber
+	stepsNumber = (movingDuration * 60) / shutterTime;
 	unsigned int valueItems[5] = {movingLength,movingDuration,shutterTime,stepsNumber,directionMotor};
 	int iMenu=0;
 	while(iMenu<6){				//Modifier la limite si plus ou moins d'item au menu
@@ -245,6 +255,8 @@ void config() {					// print menu and and call readConfig
 	    			valueItems[0] = movingLength;
 	    			valueItems[1] = movingDuration;
 	    			valueItems[2] = shutterTime;
+					// calcul du stepsNumber
+					stepsNumber = (movingDuration * 60) / shutterTime;
 	    			valueItems[3] = stepsNumber;
 				}
 	    	    break;
@@ -278,6 +290,7 @@ void backlightControl() {		//Modification de la luminosité du LCD
 
 void setup() {
 	Serial.begin(9600);
+	Serial.println("OZ-Slider v0.1!");
 	pinMode(backlightControlPin, OUTPUT);	// set backlight pin output
 	pinMode(stepperDrivePin, OUTPUT);		// set motor pin output
 	pinMode(chariotDirectionPin, OUTPUT);	// set direction pin output
@@ -289,9 +302,16 @@ void setup() {
 	lcd.setCursor(0,1);
 	lcd.print("OZ-Slider v0.1!");
 	backlightControl();				// gestion manuelle du backlight Up, Dn, Sel
+}
+
+void loop() {
 	config();						// enregistrement de la configuration du set
 
-			/* put config on serial port
+	unsigned int stepsMovingLength = movingLength * stepTommConvFactor; // déplacement total en pas
+	int stepsInterval = (10 * stepsMovingLength) / stepsNumber;			// nb de pas *10 entre deux pause
+	int stepsIntervalTime = (stepsInterval * timePerSteps / 10);		// temps de déplacement de stepsInterval en ms
+
+			// put config on serial port
 			Serial.println("Config");
 			Serial.print("Long. Mvt : ");
 			Serial.println(movingLength);
@@ -303,13 +323,21 @@ void setup() {
 			Serial.println(stepsNumber);
 			Serial.print("Direction : ");
 			Serial.println(directionMotor);
-			*/
+			//
+			// put config on serial port
+			Serial.print("Long. Mvt en step : ");
+			Serial.println(stepsMovingLength);
+			Serial.print("Intervalle en pas x 10 : ");
+			Serial.println(stepsInterval);
+			Serial.print("Temps de déplacement : ");
+			Serial.println(stepsIntervalTime);
 
-				lcd.clear();
-	    		lcd.setCursor(0,1);
-	    		lcd.print("Start cycle ?");
-}
-
-void loop() {
-
+	lcd.clear();
+	lcd.setCursor(0,1);
+	lcd.print("Start cycle ?");
+	delay(5000);
+	lcd.clear();
+	lcd.setCursor(0,1);
+	lcd.print("Config cycle !");
+	delay(2000);
 }
