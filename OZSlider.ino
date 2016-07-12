@@ -10,25 +10,29 @@ LiquidCrystal lcd(8, 9, 4, 5, 6, 7);    //set LCD output pins
 const int analogReadPin = 0;			//Pin A0 is only for read button value
 //define backlightControl pin
 const int backlightControlPin = 10;		//Pin 10 is only backlight control, if it goes low, backlight turns off!
+//define sleepDrivePin
+const int sleepDrivePin = 2;
 //define stepper driver pin
 const int stepperDrivePin = 11;
 //define chariot direction pin
 const int chariotDirectionPin = 12;
 //define shutter trigger pin
 const int shutterTriggerPin = 13;
+//define delay for shutter command
+const int shutterDelay = 130;
 //define moving Length maximum
 const int movingLengthMax = 1000;	//longueur maximum du déplacement à adapter en fonction du slider
 //step to mm conversion factor
 const int stepTommConvFactor = 5;	//x steps for 1mm
 //time per steps in ms
-const int timePerSteps = 100;		//time in ms for 1 step
+const int timePerSteps = 15;		//time in ms for 1 step
 
 //	Define config variable
 int movingLength = movingLengthMax; //longueur du déplacement en mm
-unsigned int movingDuration = 60;	//durée du cycle en mn max = 1020mn soit 17h
+unsigned int movingDuration = 15;	//durée du cycle en mn max = 1020mn soit 17h
 int shutterTime = 1;				//intervalle entre deux poses en s min = 1s
-unsigned int stepsNumber = 1500;	//nombre de poses max = 65535 poses
-boolean directionMotor = 0;			//Vers le moteur - Depuis le moteur
+unsigned int shootNumber = 0;		//nombre de poses max = 65535 poses
+boolean directionMotor = 0;			//0 Vers le moteur - 1 Depuis le moteur
 
 //BUTTONS
 //define button values
@@ -173,21 +177,21 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 			lcd.setCursor(0,1);
 	    	lcd.print(shutterTime);
 	    	break;
-	    case 3:							//Config du nombre de pause stepsNumber
-	    	// calcul du stepsNumber
-	    	stepsNumber = (movingDuration * 60) / shutterTime;
+	    case 3:							//Config du nombre de pause shootNumber
+	    	// calcul du shootNumber
+	    	shootNumber = (movingDuration * 60) / shutterTime;
 	    	// display value
 			lcd.setCursor(0,1);
-	    	lcd.print(stepsNumber);
+	    	lcd.print(shootNumber);
 	    	// display info
 	    	lcd.setCursor(5,1);
 	    	lcd.print("Non modif.");
 	    	// set value
-	    	// stepsNumber = printModifyReadValue(5,stepsNumber);
+	    	// shootNumber = printModifyReadValue(5,shootNumber);
 			lcd.setCursor(0,1);
 			lcd.print("     ");
 			lcd.setCursor(0,1);
-	    	lcd.print(stepsNumber);
+	    	lcd.print(shootNumber);
 	    	break;
 	    case 4:							//Config de la direction du mvt, Vers le moteur ou Depuis le moteur
 	    	do{
@@ -214,9 +218,9 @@ void config() {					// print menu and and call readConfig
 	//	Define menu config
 	char* menuConfigItems[] = {
 		"Long. du mvt.  >", "< Long. cycle >", "< Intervalle   >", "< Nb de pauses >", "<  Direction   >", "< Terminer conf."};
-	// calcul du stepsNumber
-	stepsNumber = (movingDuration * 60) / shutterTime;
-	unsigned int valueItems[5] = {movingLength,movingDuration,shutterTime,stepsNumber,directionMotor};
+	// calcul du shootNumber
+	shootNumber = (movingDuration * 60) / shutterTime;
+	unsigned int valueItems[5] = {movingLength,movingDuration,shutterTime,shootNumber,directionMotor};
 	int iMenu=0;
 	while(iMenu<6){				//Modifier la limite si plus ou moins d'item au menu
 		lcd.clear();
@@ -255,9 +259,9 @@ void config() {					// print menu and and call readConfig
 	    			valueItems[0] = movingLength;
 	    			valueItems[1] = movingDuration;
 	    			valueItems[2] = shutterTime;
-					// calcul du stepsNumber
-					stepsNumber = (movingDuration * 60) / shutterTime;
-	    			valueItems[3] = stepsNumber;
+					// calcul du shootNumber
+					shootNumber = (movingDuration * 60) / shutterTime;
+	    			valueItems[3] = shootNumber;
 				}
 	    	    break;
 	    	default:
@@ -291,10 +295,17 @@ void backlightControl() {		//Modification de la luminosité du LCD
 void setup() {
 	Serial.begin(9600);
 	Serial.println("OZ-Slider v0.1!");
+	// set pin mode
 	pinMode(backlightControlPin, OUTPUT);	// set backlight pin output
+	pinMode(sleepDrivePin, OUTPUT);			// set sleep motor pin output
 	pinMode(stepperDrivePin, OUTPUT);		// set motor pin output
 	pinMode(chariotDirectionPin, OUTPUT);	// set direction pin output
 	pinMode(shutterTriggerPin, OUTPUT);		// set shutter pin output
+	// set pin state
+	digitalWrite(sleepDrivePin, LOW);
+	digitalWrite(stepperDrivePin, LOW);
+	digitalWrite(chariotDirectionPin, LOW);
+	digitalWrite(shutterTriggerPin, LOW);
 
 	lcd.begin(16, 2);               // initialise LCD lib full-screen
 	lcd.setCursor(0,0);             // set cursor position
@@ -308,10 +319,10 @@ void loop() {
 	config();						// enregistrement de la configuration du set
 
 	unsigned int stepsMovingLength = movingLength * stepTommConvFactor; // déplacement total en pas
-	int stepsInterval = (10 * stepsMovingLength) / stepsNumber;			// nb de pas *10 entre deux pause
-	int stepsIntervalTime = (stepsInterval * timePerSteps / 10);		// temps de déplacement de stepsInterval en ms
+	int stepsInterval = (10 * stepsMovingLength) / shootNumber;			// nb de pas *10 entre deux pause
+	//int stepsIntervalTime = (stepsInterval * timePerSteps / 10);		// temps de déplacement de stepsInterval en ms
 
-			// put config on serial port
+			/*/ put config on serial port
 			Serial.println("Config");
 			Serial.print("Long. Mvt : ");
 			Serial.println(movingLength);
@@ -320,24 +331,89 @@ void loop() {
 			Serial.print("Temps de pose : ");
 			Serial.println(shutterTime);
 			Serial.print("Nb. de pause : ");
-			Serial.println(stepsNumber);
+			Serial.println(shootNumber);
 			Serial.print("Direction : ");
 			Serial.println(directionMotor);
 			//
-			// put config on serial port
 			Serial.print("Long. Mvt en step : ");
 			Serial.println(stepsMovingLength);
-			Serial.print("Intervalle en pas x 10 : ");
-			Serial.println(stepsInterval);
+			Serial.print("Intervalle en pas : ");
+			Serial.println((stepsInterval + 5)/10);
+
 			Serial.print("Temps de déplacement : ");
 			Serial.println(stepsIntervalTime);
-
+			*/
+	// Lancement du cycle ?
 	lcd.clear();
+	lcd.setCursor(0,0);
+	lcd.print("Lancement du");
 	lcd.setCursor(0,1);
-	lcd.print("Start cycle ?");
-	delay(5000);
+	lcd.print("cycle ?");
+	do {
+		btnVal = readLcdButtons();
+		delay(100);
+	} while (btnVal!=4);
+	// Positionnement du chariot
 	lcd.clear();
+	lcd.setCursor(0,0);
+	lcd.print("Placer chariot");
 	lcd.setCursor(0,1);
-	lcd.print("Config cycle !");
-	delay(2000);
+	if(directionMotor){
+	    lcd.print("Oppose au moteur");
+	} else {
+		lcd.print("Cote moteur     ");
+	}
+	do {
+		btnVal = readLcdButtons();
+		delay(100);
+	} while (btnVal!=4);
+	// Cycle de fonctionnement
+	lcd.clear();
+	lcd.setCursor(0,0);
+	lcd.print("Cycle en cours");
+	// Sens du mouvement
+	digitalWrite(chariotDirectionPin, directionMotor);
+	// Motor sleep mode off
+	digitalWrite(sleepDrivePin, HIGH);
+	// Boucle de Cycle
+	unsigned long timeStart;
+	unsigned int stepsNumber=0;
+	for(int seqCycle=1; seqCycle<=shootNumber; seqCycle++){
+		timeStart = millis();
+			Serial.print(seqCycle);
+		// déclenchement de la photo
+			Serial.print(" - Shutter ");
+		digitalWrite(shutterTriggerPin, LOW);
+		digitalWrite(shutterTriggerPin, HIGH);		// Shutter On
+		delay(shutterDelay);
+		digitalWrite(shutterTriggerPin, LOW);
+		do{
+		    delay(50);
+		} while ((millis() - timeStart) < ((shutterTime * 1000) - shutterDelay));
+		// déplacement du chariot
+			Serial.println("- Move.");
+		for(int steps=0; steps<((stepsInterval + 5)/10); steps++){
+			digitalWrite(stepperDrivePin, HIGH);
+			delay(1);
+			digitalWrite(stepperDrivePin, LOW);
+		    delay(10);
+		    stepsNumber++;
+		}
+		// Print conditions
+		lcd.setCursor(0,1);
+		lcd.print(seqCycle);
+		lcd.setCursor(5,1);
+		lcd.print(stepsNumber);
+		delay(100);
+		// Max steps limit
+		if(stepsNumber > stepsMovingLength){ break;}
+	}
+	// Motor sleep mode on
+	digitalWrite(sleepDrivePin, LOW);
+	lcd.setCursor(0,0);
+	lcd.print("Fin du cycle !");
+	do {
+		btnVal = readLcdButtons();
+		delay(100);
+	} while (btnVal!=4);
 }
