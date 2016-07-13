@@ -153,8 +153,8 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 			lcd.setCursor(0,1);
 	    	lcd.print(movingDuration);
 	    	// display info
-	    	lcd.setCursor(5,1);
-	    	lcd.print("mn 1020 max");
+	    	lcd.setCursor(4,1);
+	    	lcd.print(" mn 1020 max");
 	    	// set value
 	    	movingDuration = printModifyReadValue(4,movingDuration);
 	    	if(movingDuration > 1020){movingDuration = 1020;}
@@ -221,6 +221,7 @@ void config() {					// print menu and and call readConfig
 	// calcul du shootNumber
 	shootNumber = (movingDuration * 60) / shutterTime;
 	unsigned int valueItems[5] = {movingLength,movingDuration,shutterTime,shootNumber,directionMotor};
+	char* unitItems[] = {" mm", " mn", " s", " pauses", "", ""};
 	int iMenu=0;
 	while(iMenu<6){				//Modifier la limite si plus ou moins d'item au menu
 		lcd.clear();
@@ -229,6 +230,7 @@ void config() {					// print menu and and call readConfig
 	    lcd.setCursor(0,1);
 	    if(iMenu<4){
 	    	lcd.print(valueItems[iMenu]);
+	    	lcd.print(unitItems[iMenu]);
 	    } else {
 	    	if(iMenu==4){
 	    		if(directionMotor){
@@ -293,8 +295,8 @@ void backlightControl() {		//Modification de la luminosité du LCD
 }
 
 void setup() {
-	Serial.begin(9600);
-	Serial.println("OZ-Slider v0.1!");
+	//Serial.begin(9600);
+	//Serial.println("OZ-Slider v0.1!");
 	// set pin mode
 	pinMode(backlightControlPin, OUTPUT);	// set backlight pin output
 	pinMode(sleepDrivePin, OUTPUT);			// set sleep motor pin output
@@ -343,16 +345,6 @@ void loop() {
 			Serial.print("Temps de déplacement : ");
 			Serial.println(stepsIntervalTime);
 			*/
-	// Lancement du cycle ?
-	lcd.clear();
-	lcd.setCursor(0,0);
-	lcd.print("Lancement du");
-	lcd.setCursor(0,1);
-	lcd.print("cycle ?");
-	do {
-		btnVal = readLcdButtons();
-		delay(100);
-	} while (btnVal!=4);
 	// Positionnement du chariot
 	lcd.clear();
 	lcd.setCursor(0,0);
@@ -363,6 +355,26 @@ void loop() {
 	} else {
 		lcd.print("Cote moteur     ");
 	}
+	do {
+		btnVal = readLcdButtons();
+		delay(100);
+	} while (btnVal!=4);
+	// Connexion de l'appareil photo
+	lcd.clear();
+	lcd.setCursor(0,0);
+	lcd.print("Connecter ");
+	lcd.setCursor(0,1);
+	lcd.print("l'appareil photo");
+	do {
+		btnVal = readLcdButtons();
+		delay(100);
+	} while (btnVal!=4);
+	// Lancement du cycle ?
+	lcd.clear();
+	lcd.setCursor(0,0);
+	lcd.print("Lancement du");
+	lcd.setCursor(0,1);
+	lcd.print("cycle ?");
 	do {
 		btnVal = readLcdButtons();
 		delay(100);
@@ -380,9 +392,9 @@ void loop() {
 	unsigned int stepsNumber=0;
 	for(int seqCycle=1; seqCycle<=shootNumber; seqCycle++){
 		timeStart = millis();
-			Serial.print(seqCycle);
+			//Serial.print(seqCycle);
 		// déclenchement de la photo
-			Serial.print(" - Shutter ");
+			//Serial.print(" - Shutter ");
 		digitalWrite(shutterTriggerPin, LOW);
 		digitalWrite(shutterTriggerPin, HIGH);		// Shutter On
 		delay(shutterDelay);
@@ -391,7 +403,7 @@ void loop() {
 		    delay(50);
 		} while ((millis() - timeStart) < ((shutterTime * 1000) - shutterDelay));
 		// déplacement du chariot
-			Serial.println("- Move.");
+			//Serial.println("- Move.");
 		for(int steps=0; steps<((stepsInterval + 5)/10); steps++){
 			digitalWrite(stepperDrivePin, HIGH);
 			delay(1);
@@ -400,10 +412,12 @@ void loop() {
 		    stepsNumber++;
 		}
 		// Print conditions
-		lcd.setCursor(0,1);
+		lcd.setCursor(0,0);
 		lcd.print(seqCycle);
-		lcd.setCursor(5,1);
-		lcd.print(stepsNumber);
+		lcd.print(" Photos      ");
+		lcd.setCursor(0,1);
+		lcd.print(stepsNumber/stepTommConvFactor);
+		lcd.print(" mm parcourus");
 		delay(100);
 		// Max steps limit
 		if(stepsNumber > stepsMovingLength){ break;}
