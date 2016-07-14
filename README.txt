@@ -1,6 +1,9 @@
 Jun 26 2016
 Projet de création d'un slider pour timelapse.
-Création d'une application de déplacement du chariot via un moteur pas à pas et déclenchement de l'appariel photo.
+Create your own timelapse slider.
+
+Création d'une application de déplacement du chariot via un moteur pas à pas et déclenchement de l'appareil photo.
+Move a camera with stepper motor and make picture.
 Arduino Uno, LCD KeypadShield SainSmart.
 
 Thanks to Rob Taylor http://tutsplus.com/authors/rob-taylor
@@ -16,3 +19,12 @@ Utilisation : 13 = Shutter, 12 = Direction, 11 = Step, 2 = Sleep
 
 Pololu 8825
 https://www.pololu.com/product/2133
+
+Tools
+Genreral Wiring.fzz : use http://fritzing.org/home/
+Modules.graphml	: use https://www.yworks.com/products/yed
+Slider.xmind : use http://www.xmind.net/
+Slider-Stepper-Shutter.tci : use http://b.urbani.free.fr/pagetci/tci.htm "only Windows sorry !"
+
+Documentations
+Guide de l'utilisateur.md
