@@ -21,11 +21,11 @@ const int shutterTriggerPin = 13;
 //define delay for shutter command
 const int shutterDelay = 130;
 //define moving Length maximum
-const int movingLengthMax = 1000;	//longueur maximum du déplacement à adapter en fonction du slider
+const int movingLengthMax = 680;	//longueur maximum du déplacement à adapter en fonction du slider
 //step to mm conversion factor
 const int stepTommConvFactor = 5;	//x steps for 1mm
 //time per steps in ms
-const int timePerSteps = 15;		//time in ms for 1 step
+const int timePerSteps = 50;		//time in ms for 1 step
 
 //	Define config variable
 int movingLength = movingLengthMax; //longueur du déplacement en mm
@@ -198,9 +198,9 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 	    		lcd.setCursor(0, 1);
 	    		lcd.blink();
 	    		if(directionMotor){
-	    			lcd.print("Vers le moteur  ");
+	    			lcd.print("Depuis le moteur");  
 	    		} else {
-	    			lcd.print("Depuis le moteur");
+	    			lcd.print("Vers le moteur  ");
 	    		}
 	    		lcd.setCursor(0,1);
 				btnVal = readLcdButtons();
@@ -234,9 +234,9 @@ void config() {					// print menu and and call readConfig
 	    } else {
 	    	if(iMenu==4){
 	    		if(directionMotor){
-	    			lcd.print("Vers le moteur  ");
+	    			lcd.print("Depuis le moteur");
 		    	} else {
-		    		lcd.print("Depuis le moteur"); }
+		    		lcd.print("Vers le moteur  "); }
 	    	} else {
 	    		lcd.print("                "); }
 	    }
@@ -336,12 +336,12 @@ void loop() {
 			Serial.println(shootNumber);
 			Serial.print("Direction : ");
 			Serial.println(directionMotor);
-			//
+			/
 			Serial.print("Long. Mvt en step : ");
 			Serial.println(stepsMovingLength);
 			Serial.print("Intervalle en pas : ");
 			Serial.println((stepsInterval + 5)/10);
-
+			/
 			Serial.print("Temps de déplacement : ");
 			Serial.println(stepsIntervalTime);
 			*/
@@ -351,9 +351,9 @@ void loop() {
 	lcd.print("Placer chariot");
 	lcd.setCursor(0,1);
 	if(directionMotor){
-	    lcd.print("Oppose au moteur");
+	    lcd.print("Cote moteur     ");     
 	} else {
-		lcd.print("Cote moteur     ");
+		lcd.print("Oppose au moteur");
 	}
 	do {
 		btnVal = readLcdButtons();
