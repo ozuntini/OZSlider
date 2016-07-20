@@ -379,7 +379,7 @@ void loop() {
 		btnVal = readLcdButtons();
 		delay(100);
 	} while (btnVal!=4);
-	// Cycle de fonctionnement
+	// ------------------------------------------------------ Cycle de fonctionnement
 	lcd.clear();
 	lcd.setCursor(0,0);
 	lcd.print("Cycle en cours");
@@ -387,7 +387,7 @@ void loop() {
 	digitalWrite(chariotDirectionPin, directionMotor);
 	// Motor sleep mode off
 	digitalWrite(sleepDrivePin, HIGH);
-	// Boucle de Cycle
+	// ------------------------------------------------------ Boucle de Cycle
 	unsigned long timeStart;
 	unsigned int stepsNumber=0;
 	for(int seqCycle=1; seqCycle<=shootNumber; seqCycle++){
@@ -422,6 +422,7 @@ void loop() {
 		// Max steps limit
 		if(stepsNumber > stepsMovingLength){ break;}
 	}
+	// ------------------------------------------------------ Fin de boucle de Cycle
 	// Motor sleep mode on
 	digitalWrite(sleepDrivePin, LOW);
 	lcd.setCursor(0,0);
