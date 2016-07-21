@@ -23,14 +23,14 @@ const int shutterDelay = 130;
 //define moving Length maximum
 const int movingLengthMax = 680;	//longueur maximum du déplacement à adapter en fonction du slider
 //step to mm conversion factor
-const int stepTommConvFactor = 5;	//x steps for 1mm
+const int stepTommConvFactor = 20;	//x steps for 1mm
 //time per steps in ms
-const int timePerSteps = 50;		//time in ms for 1 step
+const int timePerSteps = 7;		//time in ms for 1 step
 
 //	Define config variable
 int movingLength = movingLengthMax; //longueur du déplacement en mm
-unsigned int movingDuration = 15;	//durée du cycle en mn max = 1020mn soit 17h
-int shutterTime = 1;				//intervalle entre deux poses en s min = 1s
+unsigned int movingDuration = 60;	//durée du cycle en mn max = 1020mn soit 17h
+int shutterTime = 3;				//intervalle entre deux poses en s min = 1s
 unsigned int shootNumber = 0;		//nombre de poses max = 65535 poses
 boolean directionMotor = 0;			//0 Vers le moteur - 1 Depuis le moteur
 
@@ -295,8 +295,8 @@ void backlightControl() {		//Modification de la luminosité du LCD
 }
 
 void setup() {
-	//Serial.begin(9600);
-	//Serial.println("OZ-Slider v0.1!");
+	Serial.begin(9600);
+	Serial.println("OZ-Slider v0.1!");
 	// set pin mode
 	pinMode(backlightControlPin, OUTPUT);	// set backlight pin output
 	pinMode(sleepDrivePin, OUTPUT);			// set sleep motor pin output
@@ -321,10 +321,10 @@ void loop() {
 	config();						// enregistrement de la configuration du set
 
 	unsigned int stepsMovingLength = movingLength * stepTommConvFactor; // déplacement total en pas
-	int stepsInterval = (10 * stepsMovingLength) / shootNumber;			// nb de pas *10 entre deux pause
+	int stepsInterval = stepsMovingLength / shootNumber;			// nb de pas à déplacer *10 entre deux pause
 	//int stepsIntervalTime = (stepsInterval * timePerSteps / 10);		// temps de déplacement de stepsInterval en ms
 
-			/*/ put config on serial port
+			// put config on serial port
 			Serial.println("Config");
 			Serial.print("Long. Mvt : ");
 			Serial.println(movingLength);
@@ -336,15 +336,15 @@ void loop() {
 			Serial.println(shootNumber);
 			Serial.print("Direction : ");
 			Serial.println(directionMotor);
-			/
+			//
 			Serial.print("Long. Mvt en step : ");
 			Serial.println(stepsMovingLength);
 			Serial.print("Intervalle en pas : ");
-			Serial.println((stepsInterval + 5)/10);
-			/
-			Serial.print("Temps de déplacement : ");
-			Serial.println(stepsIntervalTime);
-			*/
+			Serial.println(stepsInterval);
+			//
+			//Serial.print("Temps de déplacement : ");
+			//Serial.println(stepsIntervalTime);
+			//
 	// Positionnement du chariot
 	lcd.clear();
 	lcd.setCursor(0,0);
@@ -387,30 +387,41 @@ void loop() {
 	digitalWrite(chariotDirectionPin, directionMotor);
 	// Motor sleep mode off
 	digitalWrite(sleepDrivePin, HIGH);
-	// ------------------------------------------------------ Boucle de Cycle
+	// ------------------------------------------------------ Départ du Cycle
 	unsigned long timeStart;
 	unsigned int stepsNumber=0;
+	// déclenchement de la première photo
+	Serial.print(" - Shutter ");
+	digitalWrite(shutterTriggerPin, LOW);
+	digitalWrite(shutterTriggerPin, HIGH);		// Shutter On
+	delay(shutterDelay);
+	timeStart = millis();
+	digitalWrite(shutterTriggerPin, LOW);
+	do{											// Attente de la fin de pause
+		delay(50);
+	} while ((millis() - timeStart) < (shutterTime * 1000));
+	// ------------------------------------------------------ Boucle de Cycle
 	for(int seqCycle=1; seqCycle<=shootNumber; seqCycle++){
-		timeStart = millis();
-			//Serial.print(seqCycle);
+			Serial.print(seqCycle);
+		// déplacement du chariot
+			Serial.println("- Move.");
+		for(int steps=0; steps<((stepsInterval + 5)/10); steps++){
+			digitalWrite(stepperDrivePin, HIGH);
+			delay(2);
+			digitalWrite(stepperDrivePin, LOW);
+		    delay(2);
+		    stepsNumber++;
+		}
 		// déclenchement de la photo
-			//Serial.print(" - Shutter ");
+			Serial.print(" - Shutter ");
 		digitalWrite(shutterTriggerPin, LOW);
 		digitalWrite(shutterTriggerPin, HIGH);		// Shutter On
 		delay(shutterDelay);
+		timeStart = millis();
 		digitalWrite(shutterTriggerPin, LOW);
 		do{
 		    delay(50);
-		} while ((millis() - timeStart) < ((shutterTime * 1000) - shutterDelay));
-		// déplacement du chariot
-			//Serial.println("- Move.");
-		for(int steps=0; steps<((stepsInterval + 5)/10); steps++){
-			digitalWrite(stepperDrivePin, HIGH);
-			delay(1);
-			digitalWrite(stepperDrivePin, LOW);
-		    delay(10);
-		    stepsNumber++;
-		}
+		} while ((millis() - timeStart) < (shutterTime * 1000));
 		// Print conditions
 		lcd.setCursor(0,0);
 		lcd.print(seqCycle);
