@@ -32,7 +32,7 @@ const int stepTommConvFactor = 20;	//x steps for 1mm
 const int timePerSteps = 7;		//time in ms for 1 step
 // ------------------------------------- Define seting variables
 int movingLength = movingLengthMax; //longueur du déplacement en mm
-unsigned int movingDuration = 60;	//durée du cycle en mn max = 1020mn soit 17h
+unsigned int movingDuration = 60;	//durée du cycle en min max = 1020min soit 17h
 int cycleDuration = 3;				//intervalle entre deux pauses en s min = 1s max 65s
 boolean directionMotor = 0;			//0 Depuis le moteur - 1 Vers le moteur
 // ------------------------------------- Define calculated variables
@@ -161,7 +161,7 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 	    	lcd.print(movingDuration);
 	    	// display info
 	    	lcd.setCursor(4,1);
-	    	lcd.print(" mn 1020 max");
+	    	lcd.print(" min 1020max");
 	    	// set value
 	    	movingDuration = printModifyReadValue(4,movingDuration);
 	    	if(movingDuration > 1020){movingDuration = 1020;}
@@ -208,9 +208,9 @@ void readConfig(int iConfig) {	// for each parameters readConfig
 void config() {					// print menu and and call readConfig
 	//	Define menu config
 	char* menuConfigItems[] = {
-		"Long. du mvt.  >", "< Long. cycle >", "< Intervalle   >", "<  Direction   >", "< Terminer conf."};
+		"Long. du mvt.  >", "< Long. cycle >", "< Intervalle   >", "<  Direction   >", "< Terminer conf?"};
 	unsigned int valueItems[4] = {movingLength,movingDuration,cycleDuration,directionMotor};
-	char* unitItems[] = {" mm", " mn", " s", "", ""};
+	char* unitItems[] = {" mm", " min", " s", "", ""};
 	int iMenu=0;
 	while(iMenu<5){				//Modifier la limite si plus ou moins d'item au menu
 		lcd.clear();
@@ -239,7 +239,7 @@ void config() {					// print menu and and call readConfig
 	    	   	break;
 	    	case 3:							//Right button
 	    		iMenu++;
-	    		if(iMenu>5){iMenu=5;}
+	    		if(iMenu>4){iMenu=4;}
 	    	    break;
 	    	case 4:							//Select button
 	    		if(iMenu==4){				//End conf Menu
@@ -270,7 +270,7 @@ void page1(){
 	lcd.setCursor(0,1);
 	lcd.print("Cycle : ");
 	lcd.print(movingDuration);
-	lcd.print(" mn    ");
+	lcd.print(" min   ");
 }
 void page2(){
 	lcd.clear();
@@ -325,8 +325,8 @@ void backlightControl() {		//Modification de la luminosité du LCD
 }
 
 void setup() {
-	Serial.begin(9600);
-	Serial.println("OZ-Slider v0.1!");
+	//Serial.begin(9600);
+	//Serial.println("OZ-Slider v1.0!");
 	// set pin mode
 	pinMode(backlightControlPin, OUTPUT);	// set backlight pin output
 	pinMode(sleepDrivePin, OUTPUT);			// set sleep motor pin output
@@ -343,7 +343,7 @@ void setup() {
 	lcd.setCursor(0,0);             // set cursor position
 	lcd.print("Bienvenue dans");	// welcome screen
 	lcd.setCursor(0,1);
-	lcd.print("OZ-Slider v0.1!");
+	lcd.print("OZ-Slider v1.0!");
 	backlightControl();				// gestion manuelle du backlight Up, Dn, Sel
 }
 
@@ -364,6 +364,18 @@ void loop() {
 	lcd.print(shutterTimeMax);
 	lcd.setCursor(5,1);
 	lcd.print(" ms maximum     ");
+	do {
+		btnVal = readLcdButtons();
+		delay(100);
+	} while (btnVal!=4);
+	// Display shutterTimeMax
+	lcd.clear();
+	lcd.setCursor(0,0);
+	lcd.print("Nb. de pauses   ");
+	lcd.setCursor(0,1);
+	lcd.print(shootNumber);
+	lcd.setCursor(5,1);
+	lcd.print(" pauses     ");
 	do {
 		btnVal = readLcdButtons();
 		delay(100);
@@ -396,9 +408,9 @@ void loop() {
 
 	unsigned int stepsMovingLength = movingLength * stepTommConvFactor; // déplacement total en pas
 	int stepsInterval = stepsMovingLength / shootNumber;				// nb de pas à déplacer entre deux pause
-	int stepsIntervalTime = (stepsInterval * timePerSteps);				// temps de déplacement de stepsInterval en ms
+	//int stepsIntervalTime = (stepsInterval * timePerSteps);				// temps de déplacement de stepsInterval en ms
 
-			// put config on serial port
+			/*/ put config on serial port
 			Serial.println("Config");
 			Serial.print("Long. Mvt : ");
 			Serial.println(movingLength);
@@ -419,7 +431,7 @@ void loop() {
 			Serial.println(stepsInterval);
 			Serial.print("Temps de déplacement : ");
 			Serial.println(stepsIntervalTime);
-			//
+			/*/
 
 	// ------------------------------------------------------ Lancement du cycle ?
 	lcd.clear();
@@ -475,7 +487,7 @@ void loop() {
 		digitalWrite(shutterTriggerPin, LOW);
 		// Print conditions
 		lcd.setCursor(0,0);
-		lcd.print(seqCycle);
+		lcd.print(shootNumber-seqCycle);
 		lcd.print(" Photos      ");
 		lcd.setCursor(0,1);
 		lcd.print(stepsNumber/stepTommConvFactor);
@@ -487,12 +499,12 @@ void loop() {
 		} while ((millis() - timeStart) < (cycleDuration * 1000));
 	}
 	// ------------------------------------------------------ Fin de boucle de Cycle
-	// Motor sleep mode on
-	digitalWrite(sleepDrivePin, LOW);
 	lcd.setCursor(0,0);
 	lcd.print("Fin du cycle !");
 	do {
 		btnVal = readLcdButtons();
 		delay(100);
 	} while (btnVal!=4);
+	// Motor sleep mode on
+	digitalWrite(sleepDrivePin, LOW);
 }
