@@ -27,7 +27,7 @@ const int shutterDelay = 130;
 //define moving Length maximum in mm
 const int movingLengthMax = 680;	//longueur maximum du déplacement à adapter en fonction du slider
 //step to mm conversion factor
-const int stepTommConvFactor = 20;	//x steps for 1mm
+const int stepTommConvFactor = 40;	//x steps for 1mm
 //time per steps in ms
 const int timePerSteps = 7;		//time in ms for 1 step
 // ------------------------------------- Define seting variables
