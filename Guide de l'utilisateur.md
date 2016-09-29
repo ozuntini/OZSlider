@@ -8,7 +8,7 @@ Une fois les éléments correctement connectés et sous tension, un message de B
 
 >`Bienvenue dans`
  
->`OZ-Slider v0.1!`
+>`OZ-Slider v1.0!`
 
 ### Luminosité du LCD
 Les touches `Up` et `Down` permettent de modifier la luminosité de l'affichage LCD.
