@@ -14,6 +14,7 @@ Trois modules composent le Slider, l'alimentation, le boitier de commande et le 
 * Mettre sous tension l'ensemble depuis le boitier d'alimentation.
 
 Le boitier de commande affiche un message de bienvenue.
+
 ![Command](./Pictures/Command.jpg)
 
 ## Configuration du cycle
