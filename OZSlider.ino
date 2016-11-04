@@ -63,9 +63,9 @@ int readLcdButtons() {			// return value of pressed button or none
 
 	if (adcIn > 1000) return btnNone;
 	if (adcIn < 50)   return btnR;
-	if (adcIn < 250)  return btnUp;
-	if (adcIn < 450)  return btnDn;
-	if (adcIn < 650)  return btnL;
+	if (adcIn < 200)  return btnUp;
+	if (adcIn < 400)  return btnDn;
+	if (adcIn < 600)  return btnL;
 	if (adcIn < 850)  return btnSel;
 
 	return btnNone; //if it can't detect anything, return no button pressed
