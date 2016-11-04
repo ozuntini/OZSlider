@@ -28,3 +28,11 @@ Slider-Stepper-Shutter.tci : use http://b.urbani.free.fr/pagetci/tci.htm "only W
 
 Documentations
 Guide de l'utilisateur.md
+Guide construction.md (in progress)
+
+Motion
+Stepper motor NEMA17
+GT2 Belt
+GT2 Pulley 20 tooth
+Flat Pulley
+Slider Neewer 20"/50cm Extendable to 40"/100cm Track Dolly Rail Slider
