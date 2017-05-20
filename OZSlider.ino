@@ -1,7 +1,7 @@
 /* OZSlider.ino
    Application de déplacement d'un appareil photo sur un slider
    afin de réaliser des Time-Lapse
-   Déplacement du chariot via un moteur pas à pas et déclenchement de l'appariel photo
+   Déplacement du chariot via un moteur pas à pas et déclenchement de l'appareil photo
 */
 #include <LiquidCrystal.h>
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);    //set LCD output pins
