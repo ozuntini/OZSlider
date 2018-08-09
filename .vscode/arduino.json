@@ -1,7 +1,5 @@
 {
     "sketch": "OZSlider.ino",
     "port": "/dev/cu.wchusbserialfd120",
-    "board": "arduino:avr:uno",
-    "output": null,
-    "_debugger": null
+    "board": "arduino:avr:uno"
 }

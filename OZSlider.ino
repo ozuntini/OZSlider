@@ -6,6 +6,11 @@
 #include <LiquidCrystal.h>
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);    //set LCD output pins
 
+// Name and Version
+const char nameVersion[] = "OZ-Slider v1.1";
+// Debug mode
+const bool serialDebug = 0;
+
 // ------------------------------------- Define constants of connection
 //define analog read pin
 const int analogReadPin = 0;			//Pin A0 is only for read button value
@@ -325,8 +330,11 @@ void backlightControl() {		//Modification de la luminosité du LCD
 }
 
 void setup() {
-	Serial.begin(9600);
-	Serial.println("OZ-Slider v1.1!");
+	if (serialDebug){
+		Serial.begin(9600);
+		Serial.print(nameVersion);
+		Serial.println(" !");
+	}
 	// set pin mode
 	pinMode(backlightControlPin, OUTPUT);	// set backlight pin output
 	pinMode(sleepDrivePin, OUTPUT);			// set sleep motor pin output
@@ -343,7 +351,8 @@ void setup() {
 	lcd.setCursor(0,0);             // set cursor position
 	lcd.print("Bienvenue dans");	// welcome screen
 	lcd.setCursor(0,1);
-	lcd.print("OZ-Slider v1.1!");
+	lcd.print(nameVersion);
+	lcd.print(" !");
 	backlightControl();				// gestion manuelle du backlight Up, Dn, Sel
 }
 
@@ -410,27 +419,33 @@ void loop() {
 	int stepsInterval = stepsMovingLength / shootNumber;			// nb de pas à déplacer entre deux pause
 
 			// put config on serial port
-			Serial.println("Config");
-			Serial.print("Long. Mvt : ");
-			Serial.println(movingLength);
-			Serial.print("Long. du set : ");
-			Serial.println(movingDuration);
-			Serial.print("Temps d'un Cycle : ");
-			Serial.println(cycleDuration);
-			Serial.print("Direction : ");
-			Serial.println(directionMotor);
+			if (serialDebug){
+				Serial.println("Config");
+				Serial.print("Long. Mvt : ");
+				Serial.println(movingLength);
+				Serial.print("Long. du set : ");
+				Serial.println(movingDuration);
+				Serial.print("Temps d'un Cycle : ");
+				Serial.println(cycleDuration);
+				Serial.print("Direction : ");
+				Serial.println(directionMotor);
+			}
 			//
-			Serial.print("Nb. de pause : ");
-			Serial.println(shootNumber);
-			Serial.print("Temps de pause max : ");
-			Serial.println(shutterTimeMax);
-			Serial.print("Long. Mvt en step : ");
-			Serial.println(stepsMovingLength);
-			Serial.print("Intervalle en pas : ");
-			Serial.println(stepsInterval);
+			if (serialDebug){
+				Serial.print("Nb. de pause : ");
+				Serial.println(shootNumber);
+				Serial.print("Temps de pause max : ");
+				Serial.println(shutterTimeMax);
+				Serial.print("Long. Mvt en step : ");
+				Serial.println(stepsMovingLength);
+				Serial.print("Intervalle en pas : ");
+				Serial.println(stepsInterval);
+			}
 	int stepsIntervalTime = (stepsInterval * timePerSteps);				// temps de déplacement de stepsInterval en ms
-			Serial.print("Temps de déplacement : ");
-			Serial.println(stepsIntervalTime);
+			if (serialDebug){
+				Serial.print("Temps de déplacement : ");
+				Serial.println(stepsIntervalTime);
+			}
 			//
 
 	// ------------------------------------------------------ Lancement du cycle ?
@@ -498,17 +513,29 @@ void loop() {
 		lcd.setCursor(0,1);
 		lcd.print(stepsNumber/stepTommConvFactor);
 		lcd.print(" mm parcourus");
+		// Serial.print conditions
+		if (serialDebug){
+			Serial.print(seqCycle);
+			Serial.print("/");
+			Serial.print(shootNumber);
+			Serial.print(" Photos ");
+			Serial.print(stepsNumber/stepTommConvFactor);
+			Serial.println(" mm parcourus");
+		}
 		do{
 		    delay(50);
 		} while ((millis() - timeStart) < (cycleDuration * 1000));
 		// Max steps limit
 	} while (stepsNumber <= stepsMovingLength - stepsInterval);
 	// ------------------------------------------------------ Fin de boucle de Cycle
+	if (serialDebug){
 		Serial.println("Fin de Cycle !");
 		Serial.print("Nb de Cycle : ");
 		Serial.println(seqCycle);
 		Serial.print("Nb de pas : ");
 		Serial.println(stepsNumber);
+		}
+	
 	lcd.setCursor(0,0);
 	lcd.print("Fin du cycle !  ");
 	lcd.setCursor(0,1);

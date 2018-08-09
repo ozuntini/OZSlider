@@ -3,6 +3,8 @@
         {
             "name": "Mac",
             "includePath": [
+                "/Users/olivierzuntini/Library/Arduino15/packages/arduino/tools/**",
+                "/Users/olivierzuntini/Library/Arduino15/packages/arduino/hardware/avr/1.6.18/**",
                 "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino",
                 "/Users/olivierzuntini/Library/Arduino15/packages/arduino/hardware/avr/1.6.18/cores/arduino"
             ],
@@ -11,7 +13,13 @@
                 "path": [
                     "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino"
                 ]
-            }
+            },
+            "macFrameworkPath": [
+                "/System/Library/Frameworks",
+                "/Library/Frameworks"
+            ],
+            "intelliSenseMode": "clang-x64"
         }
-    ]
+    ],
+    "version": 4
 }
